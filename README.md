@@ -9,7 +9,7 @@ This card will show you system apps load.
 Require the package with Composer:
 
 ```shell
-composer require eusonlito/laravel-pulse-apps-load
+composer require eusonlito/laravel-pulse-apps-load:dev-master
 ```
 
 ## Register the recorder
