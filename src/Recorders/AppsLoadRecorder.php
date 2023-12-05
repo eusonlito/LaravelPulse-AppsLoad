@@ -26,6 +26,8 @@ class AppsLoadRecorder
     }
 
     /**
+     * @param \Laravel\Pulse\Events\SharedBeat $event
+     *
      * @return void
      */
     public function record(SharedBeat $event): void
@@ -43,16 +45,26 @@ class AppsLoadRecorder
         $result = Process::run('ps -eo pid,ppid,rss,pcpu,comm:50');
 
         if ($result->failed()) {
-            throw new RuntimeException('Apps Load failed: '.$result->errorOutput());
+            throw new RuntimeException(sprintf('Apps Load failed: %s', $result->errorOutput()));
         }
 
-        $apps = explode("\n", $result->output());
+        $apps = $this->lines($result->output());
         $apps = $this->acum($apps);
         $apps = $this->sort($apps);
         $apps = $this->limit($apps);
         $apps = $this->summary($apps);
 
         return $this->encode($apps);
+    }
+
+    /**
+     * @param string $output
+     *
+     * @return array
+     */
+    protected function lines(string $output): array
+    {
+        return array_filter(explode("\n", trim($output)));
     }
 
     /**
@@ -156,16 +168,8 @@ class AppsLoadRecorder
     {
         static $config;
 
-        $config ??= $this->configGet();
+        $config ??= $this->config->get('pulse.recorders.'.__CLASS__, []);
 
         return $config[$key] ?? $default;
-    }
-
-    /**
-     * @return array
-     */
-    protected function configGet(): array
-    {
-        return $this->config->get('pulse.recorders.'.__CLASS__, []);
     }
 }
