@@ -1,0 +1,29 @@
+{
+    "name": "eusonlito/laravel-pulse-apps-load",
+    "description": "A Laravel Pulse card to show Memory and CPU usage",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lito",
+            "email": "lito@eordes.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "*",
+        "laravel/pulse": "^1.0.0@beta"
+    },
+    "autoload": {
+        "psr-4": {
+            "EuSonLito\\LaravelPulse\\AppsLoad\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EuSonLito\\LaravelPulse\\AppsLoad\\AppsLoadServiceProvider"
+            ]
+        }
+    }
+}
