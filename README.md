@@ -2,6 +2,8 @@
 
 This card will show you system apps load.
 
+![image](https://github.com/eusonlito/LaravelPulse-AppsLoad/assets/644551/8716a79b-6c79-4642-905a-1c838d6bf725)
+
 ## Installation
 
 Require the package with Composer:
