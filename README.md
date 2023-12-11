@@ -2,7 +2,7 @@
 
 This card will show you system apps load.
 
-![image](https://github.com/eusonlito/LaravelPulse-AppsLoad/assets/644551/8716a79b-6c79-4642-905a-1c838d6bf725)
+![Screenshot from 2023-12-11 16-18-49](https://github.com/eusonlito/LaravelPulse-AppsLoad/assets/644551/9a501cde-0055-457c-b863-ed063bad84cf)
 
 ## Installation
 
