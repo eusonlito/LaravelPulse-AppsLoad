@@ -16,6 +16,11 @@ class AppsLoadRecorder
     public string $listen = SharedBeat::class;
 
     /**
+     * @var int
+     */
+    protected int $cpus;
+
+    /**
      * @param \Laravel\Pulse\Pulse $pulse
      * @param \Illuminate\Config\Repository $config
      *
@@ -32,9 +37,28 @@ class AppsLoadRecorder
      */
     public function record(SharedBeat $event): void
     {
-        if ($this->config('enabled')) {
-            $this->pulse->set('apps-load', 'result', $this->result());
+        if ($this->config('enabled') === false) {
+            return;
         }
+
+        $this->cpus();
+        $this->set();
+    }
+
+    /**
+     * @return void
+     */
+    protected function cpus(): void
+    {
+        $this->cpus = intval(Process::run('getconf _NPROCESSORS_ONLN')->output());
+    }
+
+    /**
+     * @return void
+     */
+    protected function set(): void
+    {
+        $this->pulse->set('apps-load', 'result', $this->result());
     }
 
     /**
@@ -42,17 +66,15 @@ class AppsLoadRecorder
      */
     protected function result(): string
     {
-        $result = Process::run('ps -eo pid,ppid,rss,pcpu,comm:50');
+        $process = Process::run('ps -eo pid,ppid,rss,pcpu,comm:50');
 
-        if ($result->failed()) {
-            throw new RuntimeException(sprintf('Apps Load failed: %s', $result->errorOutput()));
+        if ($process->failed()) {
+            throw new RuntimeException(sprintf('Apps Load failed: %s', $process->errorOutput()));
         }
 
-        $apps = $this->lines($result->output());
+        $apps = $this->lines($process->output());
         $apps = $this->acum($apps);
-        $apps = $this->sort($apps);
-        $apps = $this->limit($apps);
-        $apps = $this->summary($apps);
+        $apps = $this->group($apps);
 
         return $this->encode($apps);
     }
@@ -116,9 +138,41 @@ class AppsLoadRecorder
      *
      * @return array
      */
-    protected function sort(array $apps): array
+    protected function group(array $apps): array
     {
-        usort($apps, static fn ($a, $b) => $b['memory'] <=> $a['memory']);
+        $groups = [];
+
+        foreach (['memory', 'cpu'] as $group) {
+            $groups[$group] = $this->groupApps($apps, $group);
+        }
+
+        return $groups;
+    }
+
+    /**
+     * @param array $apps
+     * @param string $group
+     *
+     * @return array
+     */
+    protected function groupApps(array $apps, string $group): array
+    {
+        $apps = $this->groupAppsSort($apps, $group);
+        $apps = $this->groupAppsLimit($apps);
+        $apps = $this->groupAppsSummary($apps);
+
+        return $apps;
+    }
+
+    /**
+     * @param array $apps
+     * @param string $group
+     *
+     * @return array
+     */
+    protected function groupAppsSort(array $apps, string $group): array
+    {
+        usort($apps, static fn ($a, $b) => $b[$group] <=> $a[$group]);
 
         return $apps;
     }
@@ -128,7 +182,7 @@ class AppsLoadRecorder
      *
      * @return array
      */
-    protected function limit(array $apps): array
+    protected function groupAppsLimit(array $apps): array
     {
         return array_slice($apps, 0, $this->config('limit', 10));
     }
@@ -138,11 +192,11 @@ class AppsLoadRecorder
      *
      * @return array
      */
-    protected function summary(array $apps): array
+    protected function groupAppsSummary(array $apps): array
     {
-        return array_map(static function ($app) {
+        return array_map(function ($app) {
             $app['memory'] = sprintf('%.2f', $app['memory'] / 1024 / 1024);
-            $app['cpu'] = sprintf('%.2f', $app['cpu']);
+            $app['cpu'] = sprintf('%.2f', $app['cpu'] / $this->cpus);
 
             return $app;
         }, $apps);

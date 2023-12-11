@@ -3,6 +3,10 @@
         <x-slot:icon>
             <x-dynamic-component :component="'pulse::icons.server'" />
         </x-slot:icon>
+
+        <x-slot:actions>
+            <x-pulse::select wire:model.live="orderBy" label="Sort by" :options="['memory' => 'memory','cpu' => 'cpu']" />
+        </x-slot:actions>
     </x-pulse::card-header>
 
     <x-pulse::scroll :expand="$expand" wire:poll.5s="">
