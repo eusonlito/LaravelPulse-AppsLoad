@@ -24,14 +24,14 @@ class AppsLoad extends Card
     public function render(): View
     {
         return ViewFacace::make('apps-load::livewire.card', [
-            'apps' => $this->apps($this->values()),
+            'apps' => $this->apps($this->appsLoad()),
         ]);
     }
 
     /**
      * @return array
      */
-    protected function values(): array
+    protected function appsLoad(): array
     {
         return ($values = Pulse::values('apps-load', ['result'])->first())
             ? json_decode($values->value, true, JSON_THROW_ON_ERROR)
